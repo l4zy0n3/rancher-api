@@ -10,11 +10,6 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-type RequestBody struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 var _ = Describe("LoginApi", func() {
 	It("should login to rancher", func() {
 		// Create a client with insecure verification disabled
@@ -23,8 +18,11 @@ var _ = Describe("LoginApi", func() {
 		}
 		client := &http.Client{Transport: tr}
 
+		// Better of two evils: don't want to clutter the code using json.Marshal
+		requestBody := []byte(`{"username":"` + os.Getenv("RANCHER_USERNAME") + `","password":"` + os.Getenv("RANCHER_PASSWORD") + `"}`)
+
 		// Create a request
-		req, err := http.NewRequest("POST", os.Getenv("API_BASE_URL")+"/v3-public/localProviders/local?action=login", bytes.NewBuffer([]byte(`{"username":"`+os.Getenv("RANCHER_USERNAME")+`","password":"`+os.Getenv("RANCHER_PASSWORD")+`"}`)))
+		req, err := http.NewRequest("POST", os.Getenv("API_BASE_URL")+"/v3-public/localProviders/local?action=login", bytes.NewBuffer(requestBody))
 		req.Header.Add("Content-Type", "application/json")
 		Expect(err).To(BeNil())
 
